@@ -40,6 +40,8 @@ MONGODB_URI=mongodb://localhost:27017/quickbarber
 NODE_ENV=development
 ```
 
+**Note:** If you don't have MongoDB running locally, you can use MongoDB Atlas (cloud) by updating the `MONGODB_URI` with your Atlas connection string.
+
 ## Running the Application
 
 ### Development Mode
@@ -139,6 +141,8 @@ src/
 
 ## Testing the Endpoints
 
+### Local Development
+
 1. Start the application
 2. Open your browser or use curl:
 
@@ -149,3 +153,44 @@ curl http://localhost:3000/api/health
 # Database health check
 curl http://localhost:3000/api/db-health
 ```
+
+## Vercel Deployment
+
+This app is configured to work with Vercel's serverless architecture. To deploy:
+
+1. **Install Vercel CLI** (optional):
+
+```bash
+npm i -g vercel
+```
+
+2. **Deploy to Vercel**:
+
+```bash
+vercel
+```
+
+3. **Set Environment Variables** in Vercel dashboard:
+
+   - `MONGODB_URI`: Your MongoDB connection string
+   - `NODE_ENV`: production
+
+4. **Access your deployed endpoints**:
+   - Health check: `https://your-app.vercel.app/api/health`
+   - DB health check: `https://your-app.vercel.app/api/db-health`
+
+### Vercel Configuration
+
+The app includes:
+
+- `vercel.json`: Vercel configuration for traditional server deployment
+- Persistent MongoDB connection with connection pooling
+- Traditional Express.js server that runs continuously
+
+### Important Notes for Vercel
+
+- **MongoDB Connection**: The app establishes a persistent connection with connection pooling
+- **Performance**: No cold starts - database connection stays alive between requests
+- **Connection Pool**: Configured for optimal MongoDB performance with 10 concurrent connections
+- **Environment Variables**: Make sure to set `MONGODB_URI` in your Vercel project settings
+- **Cost**: Traditional server approach may have higher costs than serverless for low-traffic apps

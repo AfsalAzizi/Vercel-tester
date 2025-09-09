@@ -56,7 +56,7 @@ app.use("*", (req, res) => {
   });
 });
 
-// Start server
+// Traditional server startup (works on Vercel with proper config)
 const startServer = async () => {
   try {
     // Connect to MongoDB
@@ -91,4 +91,8 @@ process.on("SIGTERM", async () => {
   process.exit(0);
 });
 
+// Start server
 startServer();
+
+// Export for Vercel (if needed)
+export default app;
