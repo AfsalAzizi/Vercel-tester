@@ -8,20 +8,29 @@ const MONGODB_URI =
 
 export const connectDatabase = async (): Promise<void> => {
   try {
+    // Check if already connected
+    if (mongoose.connection.readyState === 1) {
+      console.log("✅ MongoDB already connected");
+      return;
+    }
+
     await mongoose.connect(MONGODB_URI, {
       // Connection pool settings for persistent connections
-      maxPoolSize: 10, // Maintain up to 10 socket connections
-      serverSelectionTimeoutMS: 5000, // Keep trying to send operations for 5 seconds
+      maxPoolSize: 5, // Reduced for Vercel
+      serverSelectionTimeoutMS: 10000, // Increased timeout for Vercel
       socketTimeoutMS: 45000, // Close sockets after 45 seconds of inactivity
       bufferCommands: false, // Disable mongoose buffering
       // Connection settings
-      connectTimeoutMS: 10000, // Give up initial connection after 10 seconds
+      connectTimeoutMS: 15000, // Increased timeout for Vercel
       heartbeatFrequencyMS: 10000, // Send a ping every 10 seconds
     });
     console.log("✅ Connected to MongoDB successfully");
   } catch (error) {
     console.error("❌ MongoDB connection error:", error);
-    process.exit(1);
+    // Don't exit process in production, just log the error
+    if (process.env.NODE_ENV !== "production") {
+      process.exit(1);
+    }
   }
 };
 

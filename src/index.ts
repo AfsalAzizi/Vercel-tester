@@ -59,8 +59,10 @@ app.use("*", (req, res) => {
 // Traditional server startup (works on Vercel with proper config)
 const startServer = async () => {
   try {
-    // Connect to MongoDB
-    await connectDatabase();
+    // Connect to MongoDB (non-blocking)
+    connectDatabase().catch((err) => {
+      console.error("MongoDB connection failed:", err);
+    });
 
     // Start the server
     app.listen(PORT, () => {
@@ -72,7 +74,9 @@ const startServer = async () => {
     });
   } catch (error) {
     console.error("Failed to start server:", error);
-    process.exit(1);
+    if (process.env.NODE_ENV !== "production") {
+      process.exit(1);
+    }
   }
 };
 
