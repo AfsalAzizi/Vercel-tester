@@ -35,6 +35,10 @@ app.use("*", notFoundHandler);
 // Traditional server startup (works on Vercel with proper config)
 const startServer = async () => {
   try {
+    console.log("🚀 Starting server...");
+    console.log("Environment:", process.env.NODE_ENV || "development");
+    console.log("MongoDB URI configured:", !!process.env.MONGODB_URI);
+
     // Connect to MongoDB (non-blocking)
     connectDatabase().catch((err) => {
       console.error("MongoDB connection failed:", err);

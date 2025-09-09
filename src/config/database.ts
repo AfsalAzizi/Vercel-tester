@@ -14,19 +14,30 @@ export const connectDatabase = async (): Promise<void> => {
       return;
     }
 
+    console.log("🔄 Attempting to connect to MongoDB...");
+    console.log("MongoDB URI:", MONGODB_URI.replace(/\/\/.*@/, "//***:***@")); // Hide credentials in logs
+
     await mongoose.connect(MONGODB_URI, {
-      // Connection pool settings for persistent connections
-      maxPoolSize: 5, // Reduced for Vercel
-      serverSelectionTimeoutMS: 10000, // Increased timeout for Vercel
-      socketTimeoutMS: 45000, // Close sockets after 45 seconds of inactivity
+      // Connection pool settings optimized for Vercel
+      maxPoolSize: 1, // Single connection for Vercel
+      serverSelectionTimeoutMS: 5000, // Quick timeout
+      socketTimeoutMS: 30000, // 30 second socket timeout
       bufferCommands: false, // Disable mongoose buffering
       // Connection settings
-      connectTimeoutMS: 15000, // Increased timeout for Vercel
+      connectTimeoutMS: 10000, // 10 second connection timeout
       heartbeatFrequencyMS: 10000, // Send a ping every 10 seconds
+      // Retry settings
+      retryWrites: true,
+      retryReads: true,
     });
     console.log("✅ Connected to MongoDB successfully");
   } catch (error) {
     console.error("❌ MongoDB connection error:", error);
+    console.error("Error details:", {
+      name: error instanceof Error ? error.name : "Unknown",
+      message: error instanceof Error ? error.message : "Unknown error",
+      stack: error instanceof Error ? error.stack : undefined,
+    });
     // Don't exit process in production, just log the error
     if (process.env.NODE_ENV !== "production") {
       process.exit(1);

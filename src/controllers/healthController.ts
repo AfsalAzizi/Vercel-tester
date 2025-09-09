@@ -26,8 +26,38 @@ export class HealthController {
    */
   static async getDatabaseHealth(req: Request, res: Response): Promise<void> {
     try {
+      const mongoose = require("mongoose");
       const dbStatus = getDatabaseStatus();
       const isConnected = dbStatus === "connected";
+
+      // If not connected, try to connect
+      if (!isConnected) {
+        console.log("🔄 Database not connected, attempting to connect...");
+        try {
+          const { connectDatabase } = await import("../config/database");
+          await connectDatabase();
+
+          // Check status again after connection attempt
+          const newStatus = getDatabaseStatus();
+          const newIsConnected = newStatus === "connected";
+
+          if (newIsConnected) {
+            res.status(200).json({
+              status: "OK",
+              database: {
+                status: newStatus,
+                connected: true,
+                message: "Database connection established successfully",
+                reconnected: true,
+              },
+              timestamp: new Date().toISOString(),
+            });
+            return;
+          }
+        } catch (connectError) {
+          console.error("Failed to connect to database:", connectError);
+        }
+      }
 
       if (isConnected) {
         res.status(200).json({
@@ -36,6 +66,7 @@ export class HealthController {
             status: dbStatus,
             connected: true,
             message: "Database connection is working perfectly",
+            connectionId: mongoose.connection.id,
           },
           timestamp: new Date().toISOString(),
         });
@@ -46,11 +77,16 @@ export class HealthController {
             status: dbStatus,
             connected: false,
             message: "Database connection is not available",
+            readyState: mongoose.connection.readyState,
+            host: mongoose.connection.host,
+            port: mongoose.connection.port,
+            name: mongoose.connection.name,
           },
           timestamp: new Date().toISOString(),
         });
       }
     } catch (error) {
+      console.error("Database health check error:", error);
       res.status(500).json({
         status: "ERROR",
         database: {
