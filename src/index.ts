@@ -2,7 +2,13 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import { connectDatabase } from "./config/database";
-import healthRoutes from "./routes/health";
+import routes from "./routes";
+import {
+  corsMiddleware,
+  requestLogger,
+  errorHandler,
+  notFoundHandler,
+} from "./middleware";
 
 // Load environment variables
 dotenv.config();
@@ -11,50 +17,20 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Middleware
-app.use(cors());
+app.use(corsMiddleware);
+app.use(cors()); // Keep cors() as backup
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(requestLogger);
 
 // Routes
-app.use("/api", healthRoutes);
-
-// Root endpoint
-app.get("/", (req, res) => {
-  res.json({
-    message: "Welcome to Express MongoDB App",
-    endpoints: {
-      health: "/api/health",
-      dbHealth: "/api/db-health",
-    },
-  });
-});
+app.use("/", routes);
 
 // Error handling middleware
-app.use(
-  (
-    err: Error,
-    req: express.Request,
-    res: express.Response,
-    next: express.NextFunction
-  ) => {
-    console.error("Error:", err.message);
-    res.status(500).json({
-      error: "Internal Server Error",
-      message:
-        process.env.NODE_ENV === "development"
-          ? err.message
-          : "Something went wrong",
-    });
-  }
-);
+app.use(errorHandler);
 
 // 404 handler
-app.use("*", (req, res) => {
-  res.status(404).json({
-    error: "Not Found",
-    message: "The requested endpoint does not exist",
-  });
-});
+app.use("*", notFoundHandler);
 
 // Traditional server startup (works on Vercel with proper config)
 const startServer = async () => {
